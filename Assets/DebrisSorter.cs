@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.UI;
+using System.Collections;
 
 public class DebrisSorter : MonoBehaviour
 {
@@ -7,11 +9,13 @@ public class DebrisSorter : MonoBehaviour
     
     [Header("Player Stats")]
     public int playerHP = 100;
+
+    [Header("UI Feedback")]
+    public Image damageFlash; 
     
     private GameObject activeDebris; 
     private bool hasReacted = false; 
 
-    // 1. Detect when an object enters the center screen
     void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Rock") || other.CompareTag("Trash") || other.CompareTag("Satellite"))
@@ -21,7 +25,6 @@ public class DebrisSorter : MonoBehaviour
         }
     }
 
-    // 2. Detect if an object leaves without the player doing anything
     void OnTriggerExit(Collider other)
     {
         if (activeDebris == other.gameObject)
@@ -33,13 +36,13 @@ public class DebrisSorter : MonoBehaviour
             else if (!activeDebris.CompareTag("Satellite") && !hasReacted)
             {
                 playerHP -= 10;
+                StartCoroutine(FlashScreen());
                 Debug.Log("Missed debris! HP dropped to: " + playerHP);
             }
             activeDebris = null;
         }
     }
 
-    // 3. Listen for key presses only if heart rate is high enough
     void Update()
     {
         if (activeDebris != null && !hasReacted && heartMonitor.currentHeartRate >= heartMonitor.targetThreshold)
@@ -55,19 +58,17 @@ public class DebrisSorter : MonoBehaviour
         }
     }
 
-    // 4. Handle the win/loss logic and color changing
     void ProcessSorting(string playerChoice)
     {
         hasReacted = true;
         string actualTag = activeDebris.tag;
-        
-        // Grab the 3D mesh so we can change its color
         MeshRenderer objectMesh = activeDebris.GetComponentInChildren<MeshRenderer>();
 
         if (actualTag == "Satellite")
         {
             ApplyColor(objectMesh, Color.red);
             playerHP -= 20;
+            StartCoroutine(FlashScreen());
             Debug.Log("FAIL: Touched a satellite! HP: " + playerHP);
         }
         else if (playerChoice == actualTag)
@@ -79,10 +80,10 @@ public class DebrisSorter : MonoBehaviour
         {
             ApplyColor(objectMesh, Color.red);
             playerHP -= 10;
+            StartCoroutine(FlashScreen());
             Debug.Log("WRONG: HP: " + playerHP);
         }
 
-        // Destroy the object 0.3 seconds later so the player has time to see the red/green flash
         Destroy(activeDebris, 0.3f); 
     }
 
@@ -91,6 +92,26 @@ public class DebrisSorter : MonoBehaviour
         if (mesh != null)
         {
             mesh.material.color = color;
+        }
+    }
+
+    IEnumerator FlashScreen()
+    {
+        if (damageFlash != null)
+        {
+            damageFlash.color = new Color(1f, 0f, 0f, .15f); // Spike to 40% opacity red
+            yield return new WaitForSeconds(0.3f);
+            
+            float fadeTime = 0.5f;
+            float elapsedTime = 0f;
+            
+            while (elapsedTime < fadeTime)
+            {
+                elapsedTime += Time.deltaTime;
+                float currentAlpha = Mathf.Lerp(0.4f, 0f, elapsedTime / fadeTime);
+                damageFlash.color = new Color(1f, 0f, 0f, currentAlpha);
+                yield return null;
+            }
         }
     }
 }
