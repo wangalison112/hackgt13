@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro; // Added library for TextMeshPro
 using System.Collections;
 
 public class DebrisSorter : MonoBehaviour
@@ -12,9 +13,15 @@ public class DebrisSorter : MonoBehaviour
 
     [Header("UI Feedback")]
     public Image damageFlash; 
+    public TMP_Text hpText; // NEW SLOT FOR HP
     
     private GameObject activeDebris; 
     private bool hasReacted = false; 
+
+    void Start()
+    {
+        UpdateHPDisplay(); // Set to 100 when the game starts
+    }
 
     void OnTriggerEnter(Collider other)
     {
@@ -36,8 +43,8 @@ public class DebrisSorter : MonoBehaviour
             else if (!activeDebris.CompareTag("Satellite") && !hasReacted)
             {
                 playerHP -= 10;
+                UpdateHPDisplay(); 
                 StartCoroutine(FlashScreen());
-                Debug.Log("Missed debris! HP dropped to: " + playerHP);
             }
             activeDebris = null;
         }
@@ -68,20 +75,19 @@ public class DebrisSorter : MonoBehaviour
         {
             ApplyColor(objectMesh, Color.red);
             playerHP -= 20;
+            UpdateHPDisplay(); 
             StartCoroutine(FlashScreen());
-            Debug.Log("FAIL: Touched a satellite! HP: " + playerHP);
         }
         else if (playerChoice == actualTag)
         {
             ApplyColor(objectMesh, Color.green);
-            Debug.Log("CORRECT: HP: " + playerHP);
         }
         else
         {
             ApplyColor(objectMesh, Color.red);
             playerHP -= 10;
+            UpdateHPDisplay(); 
             StartCoroutine(FlashScreen());
-            Debug.Log("WRONG: HP: " + playerHP);
         }
 
         Destroy(activeDebris, 0.3f); 
@@ -99,7 +105,7 @@ public class DebrisSorter : MonoBehaviour
     {
         if (damageFlash != null)
         {
-            damageFlash.color = new Color(1f, 0f, 0f, .15f); // Spike to 40% opacity red
+            damageFlash.color = new Color(1f, 0f, 0f, 0.15f);
             yield return new WaitForSeconds(0.3f);
             
             float fadeTime = 0.5f;
@@ -112,6 +118,14 @@ public class DebrisSorter : MonoBehaviour
                 damageFlash.color = new Color(1f, 0f, 0f, currentAlpha);
                 yield return null;
             }
+        }
+    }
+
+    void UpdateHPDisplay()
+    {
+        if (hpText != null)
+        {
+            hpText.text = "HP: " + playerHP;
         }
     }
 }
