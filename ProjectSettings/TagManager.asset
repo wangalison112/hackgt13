@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Drone
   - Rock
+  - Satellite
   layers:
   - Default
   - TransparentFX
