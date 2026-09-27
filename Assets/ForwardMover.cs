@@ -8,4 +8,6 @@ public class ForwardMover : MonoBehaviour
     {
         transform.Translate(Vector3.forward * moveSpeed * Time.deltaTime);
     }
+
+    // THIS FUCKING SUCKS!!
 }
